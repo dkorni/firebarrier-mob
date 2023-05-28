@@ -1,20 +1,32 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import StartWindow from './StartWindow';
+import SignUpWindow from './SignUpWindow';
+import SignInWindow from './SignInWindow';
+import ContactWindow from './ContactWindow';
+import LiveCallWindow from './LiveCallWindow';
+import IncomingCallWindow from './IncomingCallWindow';
 
-export default function App() {
+const Stack = createStackNavigator();
+
+const App = () => {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="LiveCallWindow">
+        <Stack.Screen
+          name="Start"
+          component={StartWindow}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="SignUp" component={SignUpWindow} />
+        <Stack.Screen name="SignIn" component={SignInWindow} />
+        <Stack.Screen name="Contacts" component={ContactWindow} />
+        <Stack.Screen name="LiveCallWindow" component={LiveCallWindow} />
+        <Stack.Screen name="IncomingCallWindow" component={IncomingCallWindow} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
