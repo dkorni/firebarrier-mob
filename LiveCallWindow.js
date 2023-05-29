@@ -1,5 +1,16 @@
 import React from 'react';
 import { ImageBackground, View, Text, TouchableOpacity } from 'react-native';
+import {
+	//ScreenCapturePickerView,
+	//RTCPeerConnection,
+	//RTCIceCandidate,
+	//RTCSessionDescription,
+	//RTCView,
+	//MediaStream,
+	//MediaStreamTrack,
+	//mediaDevices,
+	//registerGlobals
+} from 'react-native-webrtc';
 
 const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerminate }) => {
   return (
