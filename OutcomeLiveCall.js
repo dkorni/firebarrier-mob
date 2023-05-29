@@ -1,5 +1,6 @@
 import React from 'react';
 import { ImageBackground, View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { useNavigationParam } from '@react-navigation/native';
 import {
 	ScreenCapturePickerView,
 	RTCPeerConnection,
@@ -16,7 +17,7 @@ import {useState} from 'react';
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { collection, doc, setDoc, onSnapshot  } from "firebase/firestore"; 
+import { collection, doc, setDoc, onSnapshot, getDoc  } from "firebase/firestore"; 
 import { getFirestore } from "firebase/firestore";
 import 'react-native-get-random-values';
 import {v4 as uuidv4} from 'uuid';
@@ -46,6 +47,7 @@ const answerCandidates  = collection(db, "answerCandidates");
 let localMediaStream;
 let remoteMediaStream;
 let isVoiceOnly = false;
+let offerDescription;
 
 
 let mediaConstraints = {
@@ -58,12 +60,14 @@ let mediaConstraints = {
 
 
 
-const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerminate }) => {
+const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles, onTerminate }) => {
 
   const [localUrl, setLocalUrl] = useState("");
   const [remoteUrl, setRemoteUrl] = useState("");
   const [offerId, setOfferId] = useState("No offer id");
 
+  let id = route.params?.id;
+  console.log('ID of offer is'+id)
   async function asyncCall() {
     try {
       const mediaStream = await mediaDevices.getUserMedia( mediaConstraints );
@@ -78,8 +82,6 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
       setLocalUrl(strUrl)
       console.log(localUrl + " local url")
 
-
-      
       let peerConstraints = {
         iceServers: [
           {
@@ -89,6 +91,7 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
       };
       
       let peerConnection = new RTCPeerConnection( peerConstraints );
+
 
       let remoteCandidates = [];
 
@@ -108,6 +111,12 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
         remoteCandidates.map( candidate => peerConnection.addIceCandidate( candidate ) );
         remoteCandidates = [];
       };
+
+      // if(isIncome)
+      // {
+       
+        
+      // }
       
       peerConnection.addEventListener( 'connectionstatechange', event => {
         switch( peerConnection.connectionState ) {
@@ -144,12 +153,17 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
       } );
       
       peerConnection.addEventListener( 'negotiationneeded', async event => {
-        // You can start the offer stages here.
+
+         // You can start the offer stages here.
         // Be careful as this event can be called multiple times.
+ 
+        if(offerDescription)
+          return;
+
         console.log("Creating offer");
 
         let callId = uuidv4();
-        let callDoc = doc(calls, "call-"+callId);
+        let callDoc = doc(calls, id);
         
         let sessionConstraints = {
           mandatory: {
@@ -160,7 +174,7 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
         };
 
         try {
-          const offerDescription = await peerConnection.createOffer( sessionConstraints );
+          offerDescription = await peerConnection.createOffer( sessionConstraints );
           await peerConnection.setLocalDescription( offerDescription );
           processCandidates();
           await setDoc(callDoc, offerDescription);
@@ -169,23 +183,22 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
           const unsub = onSnapshot(callDoc, async (doc) => {
             console.log("Updated data: "+doc.data());
             const answer = doc.data();
+            
             if(answer.type == "answer"){
               const answerDescription = new RTCSessionDescription( answer );
               console.log("Setting remote description: "+doc.data());
               await peerConnection.setRemoteDescription( answerDescription );
-            }
-           
-            
-
+            }           
           });
 
           console.log("Offer created on firebase");
           setOfferId(callDoc.id);
-        
-          // Send the offerDescription to the other participant.
-        } catch( err ) {
-          console.error(err);
-        };
+      
+        // Send the offerDescription to the other participant.
+      } catch( err ) {
+        console.error(err);
+      };
+   
 
       } );
       
@@ -199,6 +212,7 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
       } );
       
       peerConnection.addEventListener( 'track', event => {
+        console.log("Grab remote stream")
         // Grab the remote track from the connected participant.
         remoteMediaStream = remoteMediaStream || new MediaStream();
         remoteMediaStream.addTrack( event.track, remoteMediaStream );
@@ -233,11 +247,12 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
         style={{ flex: 1, width: '100%' }}></ImageBackground>
       
       </View> */}
+      
       <RTCView
         style={styles.receiverCameraContainer}
         mirror={true}
         objectFit={'cover'}
-        streamURL={remoteUrl}
+        streamURL={remoteUrl} 
         zOrder={0}
       />
       {/* <View style={styles.ownerCameraContainer}>{ownerCameraView}
@@ -314,4 +329,4 @@ const styles = {
   },
 };
 
-export default LiveCallWindow;
+export default OutcomeLiveCall;

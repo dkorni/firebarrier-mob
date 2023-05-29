@@ -5,7 +5,7 @@ import StartWindow from './StartWindow';
 import SignUpWindow from './SignUpWindow';
 import SignInWindow from './SignInWindow';
 import ContactWindow from './ContactWindow';
-import LiveCallWindow from './LiveCallWindow';
+import OutcomeLiveCall from './OutcomeLiveCall';
 import IncomingCallWindow from './IncomingCallWindow';
 import ConnectMenu from './ConnectMenu';
 
@@ -23,7 +23,7 @@ const App = () => {
         <Stack.Screen name="SignUp" component={SignUpWindow} />
         <Stack.Screen name="SignIn" component={SignInWindow} />
         <Stack.Screen name="Contacts" component={ContactWindow} />
-        <Stack.Screen name="LiveCallWindow" component={LiveCallWindow} />
+        <Stack.Screen name="OutcomeLiveCall" component={OutcomeLiveCall} />
         <Stack.Screen name="IncomingCallWindow" component={IncomingCallWindow} />
         <Stack.Screen name="ConnectMenu" component={ConnectMenu} />
       </Stack.Navigator>

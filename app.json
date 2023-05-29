@@ -19,7 +19,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bitcode": false
+      "bitcode": false,
+      "bundleIdentifier": "com.anonymous.firebarrier"
     },
     "android": {
       "adaptiveIcon": {

@@ -7,12 +7,13 @@ const ConnectMenu = ({navigation}) => {
   const handleConnect = () => {
     // Implement sign-in logic here
     console.log('Connecting...');
+  //  navigation.navigate('OutcomeLiveCall', {isIncome:true, id: sessionName});
   };
 
   const create = () => {
     // Implement sign-in logic here
     console.log('Creating...');
-    navigation.navigate('LiveCallWindow');
+    navigation.navigate('OutcomeLiveCall', {id: sessionName});
   };
 
 
@@ -21,7 +22,7 @@ const ConnectMenu = ({navigation}) => {
       <Text style={styles.title}>Connect screen</Text>
       <TextInput
         style={styles.input}
-        placeholder="Session code"
+        placeholder="Session code1"
         value={sessionName}
         onChangeText={(text) => setSessionname(text)}
       />
