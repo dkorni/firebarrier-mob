@@ -160,6 +160,17 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
             // update firebase
             await setDoc(docRef, answerDescription);
             console.log("Firebase updated!");
+
+            onSnapshot(offerCandidates,(snapshot) => {
+              snapshot.docChanges().forEach((change) => {
+                console.log(change);
+                if (change.type === 'added') {
+                  let data = change.doc.data();
+                  console.log("Offer Candidate: "+ data)
+                  peerConnection.addIceCandidate(new RTCIceCandidate(data));
+                }
+              });
+            });
           }catch(e){
             console.log(e);
           }
