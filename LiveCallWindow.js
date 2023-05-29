@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageBackground, View, Text, TouchableOpacity } from 'react-native';
+import { ImageBackground, View, Text, TouchableOpacity, TextInput } from 'react-native';
 import {
 	ScreenCapturePickerView,
 	RTCPeerConnection,
@@ -14,6 +14,33 @@ import {
 import {useState} from 'react';
 
 
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { collection, doc, setDoc, onSnapshot  } from "firebase/firestore"; 
+import { getFirestore } from "firebase/firestore";
+import 'react-native-get-random-values';
+import {v4 as uuidv4} from 'uuid';
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyA9P_SG1A7qZ296cLuw_Q_cViOeOp6Ht0g",
+  authDomain: "firebarrier-88bc1.firebaseapp.com",
+  projectId: "firebarrier-88bc1",
+  storageBucket: "firebarrier-88bc1.appspot.com",
+  messagingSenderId: "34671031006",
+  appId: "1:34671031006:web:02a162dd3ced32e352c84f",
+  measurementId: "G-N6STHJN7DP"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const calls = collection(db, "calls");
+const offerCandidates = collection(db, "offerCandidates");
+const answerCandidates  = collection(db, "answerCandidates");
 
 
 let localMediaStream;
@@ -35,6 +62,7 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
 
   const [localUrl, setLocalUrl] = useState("");
   const [remoteUrl, setRemoteUrl] = useState("");
+  const [offerId, setOfferId] = useState("No offer id");
 
   async function asyncCall() {
     try {
@@ -61,6 +89,25 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
       };
       
       let peerConnection = new RTCPeerConnection( peerConstraints );
+
+      let remoteCandidates = [];
+
+      function handleRemoteCandidate( iceCandidate ) {
+        iceCandidate = new RTCIceCandidate( iceCandidate );
+
+        if ( peerConnection.remoteDescription == null ) {
+          return remoteCandidates.push( iceCandidate );
+        };
+
+        return peerConnection.addIceCandidate( iceCandidate );
+      };
+
+      function processCandidates() {
+        if ( remoteCandidates.length < 1 ) { return; };
+
+        remoteCandidates.map( candidate => peerConnection.addIceCandidate( candidate ) );
+        remoteCandidates = [];
+      };
       
       peerConnection.addEventListener( 'connectionstatechange', event => {
         switch( peerConnection.connectionState ) {
@@ -96,9 +143,50 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
         };
       } );
       
-      peerConnection.addEventListener( 'negotiationneeded', event => {
+      peerConnection.addEventListener( 'negotiationneeded', async event => {
         // You can start the offer stages here.
         // Be careful as this event can be called multiple times.
+        console.log("Creating offer");
+
+        let callId = uuidv4();
+        let callDoc = doc(calls, "call-"+callId);
+        
+        let sessionConstraints = {
+          mandatory: {
+            OfferToReceiveAudio: true,
+            OfferToReceiveVideo: true,
+            VoiceActivityDetection: true
+          }
+        };
+
+        try {
+          const offerDescription = await peerConnection.createOffer( sessionConstraints );
+          await peerConnection.setLocalDescription( offerDescription );
+          processCandidates();
+          await setDoc(callDoc, offerDescription);
+
+          // subscribing on document changes
+          const unsub = onSnapshot(callDoc, async (doc) => {
+            console.log("Updated data: "+doc.data());
+            const answer = doc.data();
+            if(answer.type == "answer"){
+              const answerDescription = new RTCSessionDescription( answer );
+              console.log("Setting remote description: "+doc.data());
+              await peerConnection.setRemoteDescription( answerDescription );
+            }
+           
+            
+
+          });
+
+          console.log("Offer created on firebase");
+          setOfferId(callDoc.id);
+        
+          // Send the offerDescription to the other participant.
+        } catch( err ) {
+          console.error(err);
+        };
+
       } );
       
       peerConnection.addEventListener( 'signalingstatechange', event => {
@@ -167,7 +255,7 @@ const LiveCallWindow = ({ receiverCameraView, ownerCameraView, subtitles, onTerm
       />
       <View style={styles.footer}>
         <View style={styles.subtitlesContainer}>
-          <Text style={styles.subtitles}>Here you must see translation of signs</Text>
+          <TextInput style={styles.subtitles}>{offerId}</TextInput>
         </View>
         <TouchableOpacity style={styles.terminateButton} onPress={onTerminate}>
           <Text style={styles.buttonText}>Terminate</Text>

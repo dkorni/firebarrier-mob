@@ -7,13 +7,14 @@ import SignInWindow from './SignInWindow';
 import ContactWindow from './ContactWindow';
 import LiveCallWindow from './LiveCallWindow';
 import IncomingCallWindow from './IncomingCallWindow';
+import ConnectMenu from './ConnectMenu';
 
 const Stack = createStackNavigator();
 
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="LiveCallWindow">
+      <Stack.Navigator initialRouteName="ConnectMenu">
         <Stack.Screen
           name="Start"
           component={StartWindow}
@@ -24,6 +25,7 @@ const App = () => {
         <Stack.Screen name="Contacts" component={ContactWindow} />
         <Stack.Screen name="LiveCallWindow" component={LiveCallWindow} />
         <Stack.Screen name="IncomingCallWindow" component={IncomingCallWindow} />
+        <Stack.Screen name="ConnectMenu" component={ConnectMenu} />
       </Stack.Navigator>
     </NavigationContainer>
   );
