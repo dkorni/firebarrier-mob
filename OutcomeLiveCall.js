@@ -17,7 +17,7 @@ import {useState} from 'react';
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { collection, doc, setDoc, onSnapshot, getDoc  } from "firebase/firestore"; 
+import { collection, doc, setDoc, onSnapshot, getDoc, addDoc  } from "firebase/firestore"; 
 import { getFirestore } from "firebase/firestore";
 import 'react-native-get-random-values';
 import {v4 as uuidv4} from 'uuid';
@@ -111,12 +111,6 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
         remoteCandidates.map( candidate => peerConnection.addIceCandidate( candidate ) );
         remoteCandidates = [];
       };
-
-      // if(isIncome)
-      // {
-       
-        
-      // }
       
       peerConnection.addEventListener( 'connectionstatechange', event => {
         switch( peerConnection.connectionState ) {
@@ -127,13 +121,15 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
         };
       } );
       
-      peerConnection.addEventListener( 'icecandidate', event => {
+      peerConnection.addEventListener( 'icecandidate', async event => {
         // When you find a null candidate then there are no more candidates.
         // Gathering of candidates has finished.
         if ( !event.candidate ) { return; };
       
         // Send the event.candidate onto the person you're calling.
         // Keeping to Trickle ICE Standards, you should send the candidates immediately.
+
+        await addDoc(collection(db, "offerCandidates"), event.candidate.toJSON());
       } );
       
       peerConnection.addEventListener( 'icecandidateerror', event => {
@@ -176,7 +172,6 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
         try {
           offerDescription = await peerConnection.createOffer( sessionConstraints );
           await peerConnection.setLocalDescription( offerDescription );
-          processCandidates();
           await setDoc(callDoc, offerDescription);
 
           // subscribing on document changes
@@ -189,6 +184,18 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
               console.log("Setting remote description: "+doc.data());
               await peerConnection.setRemoteDescription( answerDescription );
             }           
+          });
+
+          var answerCandidates = collection(db, "answerCandidates");
+          onSnapshot(answerCandidates, (snapshot)=>{
+            snapshot.docChanges().forEach((change) => {
+              if (change.type === 'added' && peerConnection.remoteDescription) {
+                console.log("Adding answer Candidate: "+ change.doc.data());
+                const candidate = new RTCIceCandidate(change.doc.data());
+                peerConnection.addIceCandidate(candidate);
+                console.log("Added answer Candidate: "+ change.doc.data());
+              }
+            });
           });
 
           console.log("Offer created on firebase");
@@ -216,7 +223,7 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
         // Grab the remote track from the connected participant.
         remoteMediaStream = remoteMediaStream || new MediaStream();
         remoteMediaStream.addTrack( event.track, remoteMediaStream );
-        let remoteUrlStr = localMediaStream.toURL();
+        let remoteUrlStr = remoteMediaStream.toURL();
         setRemoteUrl(remoteUrlStr);
       } );
       

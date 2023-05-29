@@ -17,7 +17,7 @@ import {useState} from 'react';
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { collection, doc, setDoc, onSnapshot, getDoc  } from "firebase/firestore"; 
+import { collection, doc, setDoc, onSnapshot, getDoc, addDoc  } from "firebase/firestore"; 
 import { getFirestore } from "firebase/firestore";
 import 'react-native-get-random-values';
 import {v4 as uuidv4} from 'uuid';
@@ -60,7 +60,7 @@ let mediaConstraints = {
 
 
 
-const LiveCallWindow = ({ route, receiverCameraView, ownerCameraView, subtitles, onTerminate }) => {
+const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles, onTerminate }) => {
 
   const [localUrl, setLocalUrl] = useState("");
   const [remoteUrl, setRemoteUrl] = useState("");
@@ -91,26 +91,10 @@ const LiveCallWindow = ({ route, receiverCameraView, ownerCameraView, subtitles,
       };
       
       let peerConnection = new RTCPeerConnection( peerConstraints );
-
-
-      let remoteCandidates = [];
-
-      function handleRemoteCandidate( iceCandidate ) {
-        iceCandidate = new RTCIceCandidate( iceCandidate );
-
-        if ( peerConnection.remoteDescription == null ) {
-          return remoteCandidates.push( iceCandidate );
-        };
-
-        return peerConnection.addIceCandidate( iceCandidate );
-      };
-
-      function processCandidates() {
-        if ( remoteCandidates.length < 1 ) { return; };
-
-        remoteCandidates.map( candidate => peerConnection.addIceCandidate( candidate ) );
-        remoteCandidates = [];
-      };
+            // Add our stream to the peer connection.
+            localMediaStream.getTracks().forEach( 
+              track => peerConnection.addTrack( track, localMediaStream )
+            );
 
       peerConnection.addEventListener( 'connectionstatechange', event => {
         switch( peerConnection.connectionState ) {
@@ -121,13 +105,14 @@ const LiveCallWindow = ({ route, receiverCameraView, ownerCameraView, subtitles,
         };
       } );
       
-      peerConnection.addEventListener( 'icecandidate', event => {
+      peerConnection.addEventListener( 'icecandidate', async event => {
         // When you find a null candidate then there are no more candidates.
         // Gathering of candidates has finished.
         if ( !event.candidate ) { return; };
       
         // Send the event.candidate onto the person you're calling.
         // Keeping to Trickle ICE Standards, you should send the candidates immediately.
+        await addDoc(collection(db, "answerCandidates"), event.candidate.toJSON());
       } );
       
       peerConnection.addEventListener( 'icecandidateerror', event => {
@@ -169,7 +154,6 @@ const LiveCallWindow = ({ route, receiverCameraView, ownerCameraView, subtitles,
             await peerConnection.setLocalDescription( answerDescription );
     
             // Here is a good place to process candidates.
-            processCandidates();
             
             console.log("Answer created!");
     
@@ -196,14 +180,11 @@ const LiveCallWindow = ({ route, receiverCameraView, ownerCameraView, subtitles,
         // Grab the remote track from the connected participant.
         remoteMediaStream = remoteMediaStream || new MediaStream();
         remoteMediaStream.addTrack( event.track, remoteMediaStream );
-        let remoteUrlStr = localMediaStream.toURL();
+        let remoteUrlStr = remoteMediaStream.toURL();
         setRemoteUrl(remoteUrlStr);
       } );
       
-      // Add our stream to the peer connection.
-      localMediaStream.getTracks().forEach( 
-        track => peerConnection.addTrack( track, localMediaStream )
-      );
+
 
     } catch( err ) {
       // Handle Error
@@ -309,4 +290,4 @@ const styles = {
   },
 };
 
-export default LiveCallWindow;
+export default IncomeLiveCall;

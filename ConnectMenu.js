@@ -7,7 +7,7 @@ const ConnectMenu = ({navigation}) => {
   const handleConnect = () => {
     // Implement sign-in logic here
     console.log('Connecting...');
-  //  navigation.navigate('OutcomeLiveCall', {isIncome:true, id: sessionName});
+    navigation.navigate('IncomeLiveCall', {isIncome:true, id: sessionName});
   };
 
   const create = () => {
