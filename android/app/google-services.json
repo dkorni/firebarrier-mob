@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "34671031006",
+    "project_id": "firebarrier-88bc1",
+    "storage_bucket": "firebarrier-88bc1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:34671031006:android:d6aa8c0fda4343ed52c84f",
+        "android_client_info": {
+          "package_name": "com.anonymous.firebarrier"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "34671031006-uok3pqclsq27ggtbhml4gkhpv084m1e2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYXT4G6aggp3Kbg4YVHMRrFbGNz6V5p1k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "34671031006-uok3pqclsq27ggtbhml4gkhpv084m1e2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:34671031006:android:f2cdbaa512a1201652c84f",
+        "android_client_info": {
+          "package_name": "com.denyskorniienko.firebarrier"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "34671031006-uok3pqclsq27ggtbhml4gkhpv084m1e2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYXT4G6aggp3Kbg4YVHMRrFbGNz6V5p1k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "34671031006-uok3pqclsq27ggtbhml4gkhpv084m1e2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
