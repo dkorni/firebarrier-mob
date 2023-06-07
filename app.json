@@ -47,5 +47,6 @@
         "projectId": "60d6045c-c86a-4f4c-9745-80665e0e0af8"
       }
     }
-  }
+  },
+  "WebApi":"https://a1ab-217-17-88-117.ngrok-free.app/api"
 }

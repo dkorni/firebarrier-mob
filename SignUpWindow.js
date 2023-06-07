@@ -1,13 +1,60 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import CheckBox from '@react-native-community/checkbox';
+import app from './app.json'
+import * as SecureStore from 'expo-secure-store';
+import Context from './Context';
 
-const SignUpWindow = () => {
+const SignUpWindow = ({navigation}) => {
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
+  const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isDeafmute, setDeafmute] = useState(false);
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
+
+
+    const url = app.WebApi+"/auth/signup";
+
+    const body = {
+      firstname:firstname,
+      lastname:lastname,
+      nickname:nickname,
+      email:email,
+      password:password,
+      isDeafmute:isDeafmute
+    }
+
+    console.log(url);
+    await fetch(url,{
+      method:'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body:JSON.stringify(body)
+    })
+    .then((response) => {
+      if(response.status == 200)
+        return response.json()
+      
+      else
+        throw new Error('Wrong password');
+    })
+    .then(async (responseJson) =>  {
+       console.log(responseJson);
+       await SecureStore.setItemAsync('secure_token', responseJson.token);
+       Context.TOKEN = 'Bearer '+responseJson.token;
+       navigation.navigate('Contacts');
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+    
     // Implement sign-up logic here
-    console.log('Sign up');
+
   };
 
   return (
@@ -16,22 +63,20 @@ const SignUpWindow = () => {
       <TextInput
         style={styles.input}
         placeholder="First name"
-        secureTextEntry
-        value={password}
-        onChangeText={(text) => setPassword(text)}
+        value={firstname}
+        onChangeText={(text) => setFirstname(text)}
       />
       <TextInput
         style={styles.input}
         placeholder="Last name"
-        secureTextEntry
-        value={password}
-        onChangeText={(text) => setPassword(text)}
+        value={lastname}
+        onChangeText={(text) => setLastname(text)}
       />
        <TextInput
         style={styles.input}
         placeholder="Nickname"
-        value={email}
-        onChangeText={(text) => setEmail(text)}
+        value={nickname}
+        onChangeText={(text) => setNickname(text)}
       />
       <TextInput
         style={styles.input}
@@ -46,6 +91,12 @@ const SignUpWindow = () => {
         value={password}
         onChangeText={(text) => setPassword(text)}
       />
+      <View style={styles.checkboxContainer}>
+      <CheckBox value={isDeafmute} onValueChange={setDeafmute}>
+      </CheckBox>
+      <Text style={styles.label}>Are you deafmuted?</Text>
+      </View>
+     
       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
@@ -85,6 +136,16 @@ const styles = {
     fontSize: 16,
     fontWeight: 'bold',
   },
+  checkboxContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  checkbox: {
+    alignSelf: 'center',
+  },
+  label: {
+    margin: 8,
+  }
 };
 
 export default SignUpWindow;

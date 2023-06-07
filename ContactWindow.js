@@ -1,41 +1,63 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, Image } from 'react-native';
+import Context from './Context';
+import app from './app.json';
+import FooterMenuBar from './components/FooterMenuBar'
 
-const contactsData = [
-  {
-    id: 1,
-    firstName: 'John',
-    lastName: 'Doe',
-    nickname: 'johndoe',
-    avatar: require('./user.png'),
-  },
-  {
-    id: 2,
-    firstName: 'Jane',
-    lastName: 'Smith',
-    nickname: 'janesmith',
-    avatar: require('./user.png'),
-  },
-  // Add more contact data as needed
-];
+let contactsData = null;
 
-const ContactWindow = () => {
+
+const ContactWindow = ({navigation}) => {
+
   const [searchQuery, setSearchQuery] = useState('');
   const [contacts, setContacts] = useState(contactsData);
+
+  async function LoadData(){
+    const url = app.WebApi+"/persons";
+    await fetch(url,{
+      method:'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': Context.TOKEN
+      }
+    })
+    .then((response) => {
+      console.log(Context.TOKEN)
+      if(response.status == 200)
+        return response.json()
+      
+      else
+        throw new Error('Smth was wrong: '+response.status);
+    })
+    .then(async (responseJson) =>  {
+      contactsData = responseJson;
+      setContacts(responseJson);
+      return responseJson;
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+  }
+  
+  if(contacts == null){
+    LoadData();
+  }
+  
 
   const handleSearch = (query) => {
     setSearchQuery(query);
     const filteredContacts = contactsData.filter((contact) =>
-      contact.nickname.toLowerCase().includes(query.toLowerCase())
+      contact.lastname.toLowerCase().includes(query.toLowerCase())
     );
     setContacts(filteredContacts);
   };
 
   const renderContactItem = ({ item }) => (
     <View style={styles.contactContainer}>
-      <Image source={item.avatar} style={styles.avatar} />
+      <Image source={require('./user.png')} style={styles.avatar} />
       <View style={styles.contactDetails}>
-        <Text style={styles.name}>{`${item.firstName} ${item.lastName}`}</Text>
+        <Text style={styles.name}>{`${item.firstname} ${item.lastname}`}</Text>
         <TouchableOpacity style={styles.callButton}>
           <Text style={styles.callButtonText}>Call</Text>
         </TouchableOpacity>
@@ -48,7 +70,7 @@ const ContactWindow = () => {
       <View style={styles.header}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by nickname"
+          placeholder="Search by name"
           value={searchQuery}
           onChangeText={handleSearch}
         />
@@ -58,6 +80,7 @@ const ContactWindow = () => {
         renderItem={renderContactItem}
         keyExtractor={(item) => item.id.toString()}
       />
+      <FooterMenuBar navigation={navigation} />
     </View>
   );
 };
