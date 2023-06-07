@@ -3,8 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, FlatList, Image } from 'react-
 import Context from './Context';
 import app from './app.json';
 import FooterMenuBar from './components/FooterMenuBar'
+import CallManager from './logic/CallManager';
 
 let contactsData = null;
+
+function atob(str) {
+  return Buffer.from(str, 'base64').toString('binary');
+}
 
 
 const ContactWindow = ({navigation}) => {
@@ -53,12 +58,18 @@ const ContactWindow = ({navigation}) => {
     setContacts(filteredContacts);
   };
 
+  const startCall= async (id, navigation)=>{
+    let tokenData = JSON.parse(atob(Context.TOKEN.split('.')[1]));
+    await CallManager.Call(id, tokenData.UserId, navigation);
+
+  }
+
   const renderContactItem = ({ item }) => (
     <View style={styles.contactContainer}>
       <Image source={require('./user.png')} style={styles.avatar} />
       <View style={styles.contactDetails}>
         <Text style={styles.name}>{`${item.firstname} ${item.lastname}`}</Text>
-        <TouchableOpacity style={styles.callButton}>
+        <TouchableOpacity style={styles.callButton} onPress={()=>startCall(item.id, navigation)}>
           <Text style={styles.callButtonText}>Call</Text>
         </TouchableOpacity>
       </View>

@@ -2,8 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Context from './Context';
+import CallManager from './logic/CallManager';
 
 import app from './app.json'
+
+function atob(str) {
+  return Buffer.from(str, 'base64').toString('binary');
+}
+
 
 async function SkipAuthIfNeeded(navigation){
  
@@ -21,10 +27,16 @@ async function SkipAuthIfNeeded(navigation){
           'Authorization': 'Bearer '+token
         }
       })
-      .then((response) => {
+      .then(async (response) => {
         console.log(response.status);
         if(response.status == 200){
           Context.TOKEN = 'Bearer '+token;
+
+          // subscribe on incoming calls
+          let tokenData = JSON.parse(atob(token.split('.')[1]));
+          CallManager.Init();
+          await CallManager.SubcribeToIncomeCalls(tokenData.UserId,navigation);
+
           navigation.navigate('Contacts');
           return;
         }
@@ -48,6 +60,7 @@ async function SkipAuthIfNeeded(navigation){
 const LoadingScreen = ({navigation}) => {
   SkipAuthIfNeeded(navigation);
   console.log("Loading screen");
+  
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color="#0000ff" />

@@ -1,25 +1,21 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
-
 import CallManager from './logic/CallManager';
 
 async function HangUp(id,navigation){
   await CallManager.HangUp(id, navigation);
 }
 
-const IncomingCallWindow = ({ navigation, route, callerAvatar, onRespond, onTerminate }) => {
-  let callerName = route.params?.callerName;
-  let userId = route.params?.userId;
+const OutcomingCallWindow = ({navigation, route, callerAvatar, onRespond, onTerminate }) => {
+  let receiverId = route.params?.receiverId;
+  let receiverName = route.params?.receiverName;
   return (
     <View style={styles.container}>
       <Image source={require('./user.png')} style={styles.avatar} />
       {/* ${callerName} */}
-      <Text style={styles.callerName}>{callerName + ` is calling you`}</Text>
-      <TouchableOpacity style={styles.respondButton} onPress={onRespond}>
-        <Text style={styles.buttonText}>Respond</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.terminateButton} onPress={()=>HangUp(userId, navigation)}>
-        <Text style={styles.buttonText}>Hung up</Text>
+      <Text style={styles.callerName}>{'Waiting for response from '+ receiverName}</Text>
+      <TouchableOpacity style={styles.terminateButton} onPress={()=>HangUp(receiverId, navigation)}>
+        <Text style={styles.buttonText}>Hang up</Text>
       </TouchableOpacity>
     </View>
   );
@@ -64,4 +60,4 @@ const styles = {
   },
 };
 
-export default IncomingCallWindow;
+export default OutcomingCallWindow;

@@ -10,8 +10,10 @@ import IncomingCallWindow from './IncomingCallWindow';
 import IncomeLiveCall from './IncomeLiveCall';
 import ConnectMenu from './ConnectMenu';
 import LoadingScreen from './LoadingScreen';
+import OutcomingCallWindow from './OutcomingCallWindow';
 
 const Stack = createStackNavigator();
+global.Buffer = require('buffer').Buffer;
 
 const App = () => {
   return (
@@ -30,6 +32,7 @@ const App = () => {
         <Stack.Screen  options={{headerShown: false}} name="IncomingCallWindow" component={IncomingCallWindow} />
         <Stack.Screen  options={{headerShown: false}} name="ConnectMenu" component={ConnectMenu} />
         <Stack.Screen  options={{headerShown: false}} name="LoadingScreen" component={LoadingScreen} />
+        <Stack.Screen  options={{headerShown: false}} name="OutcomingCallWindow" component={OutcomingCallWindow} />
       </Stack.Navigator>
     </NavigationContainer>
   );
