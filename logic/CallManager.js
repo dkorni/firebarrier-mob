@@ -144,7 +144,24 @@ class CallManager{
             
            if(call.status == "terminated"){
                 navigation.navigate("Contacts");
+            }
+            if(call.status == "responded"){
+                navigation.navigate("OutcomeLiveCall",  {id: id});
             }                    
+          });
+    }
+
+    static async SubcribeToImcomingCalls(id, navigation){
+
+        console.log("Subscribing on incoming calls");
+        const docRef = doc(db, "calls", id);
+        const unsub = onSnapshot(docRef, async (doc) => {
+           
+           const call = doc.data();
+            
+           if(call.status == "OfferCreated"){
+                navigation.navigate("IncomeLiveCall",  {id: id});
+            }                
           });
     }
 
@@ -156,6 +173,16 @@ class CallManager{
         call.status = "terminated";
         await setDoc(docRef, call);
         navigation.navigate("Contacts");
+    }
+
+    static async Respond(id, navigation){
+        this.SubcribeToImcomingCalls(id, navigation);
+        console.log("Respond call to "+id);
+        const docRef = doc(db, "calls", id);
+        let docSnap = await getDoc(docRef);
+        let call = docSnap.data();
+        call.status = "responded";
+        await setDoc(docRef, call);
     }
 }
 

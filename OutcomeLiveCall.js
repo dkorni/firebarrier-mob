@@ -160,6 +160,8 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
 
         let callId = uuidv4();
         let callDoc = doc(calls, id);
+        let docSnap = await getDoc(callDoc);
+        let offerData = docSnap.data();
         
         let sessionConstraints = {
           mandatory: {
@@ -172,15 +174,15 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
         try {
           offerDescription = await peerConnection.createOffer( sessionConstraints );
           await peerConnection.setLocalDescription( offerDescription );
-          await setDoc(callDoc, offerDescription);
-
+          offerData.contract = offerDescription;
+       
           // subscribing on document changes
           const unsub = onSnapshot(callDoc, async (doc) => {
             console.log("Updated data: "+doc.data());
             const answer = doc.data();
-            
-            if(answer.type == "answer"){
-              const answerDescription = new RTCSessionDescription( answer );
+
+            if(answer.status == "answered"){
+              const answerDescription = new RTCSessionDescription( answer.contract );
               console.log("Setting remote description: "+doc.data());
               await peerConnection.setRemoteDescription( answerDescription );
             }           
@@ -190,13 +192,16 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
           onSnapshot(answerCandidates, (snapshot)=>{
             snapshot.docChanges().forEach((change) => {
               if (change.type === 'added' && peerConnection.remoteDescription) {
-                console.log("Adding answer Candidate: "+ change.doc.data());
+                console.log("Adding answer Candidate");
                 const candidate = new RTCIceCandidate(change.doc.data());
                 peerConnection.addIceCandidate(candidate);
-                console.log("Added answer Candidate: "+ change.doc.data());
+                console.log("Added answer Candidate");
               }
             });
           });
+
+          offerData.status = "OfferCreated"
+          await setDoc(callDoc, offerData);
 
           console.log("Offer created on firebase");
           setOfferId(callDoc.id);

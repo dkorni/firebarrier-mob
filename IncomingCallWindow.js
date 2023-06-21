@@ -7,6 +7,10 @@ async function HangUp(id,navigation){
   await CallManager.HangUp(id, navigation);
 }
 
+async function Respond(id,navigation){
+  await CallManager.Respond(id, navigation);
+}
+
 const IncomingCallWindow = ({ navigation, route, callerAvatar, onRespond, onTerminate }) => {
   let callerName = route.params?.callerName;
   let userId = route.params?.userId;
@@ -15,7 +19,7 @@ const IncomingCallWindow = ({ navigation, route, callerAvatar, onRespond, onTerm
       <Image source={require('./user.png')} style={styles.avatar} />
       {/* ${callerName} */}
       <Text style={styles.callerName}>{callerName + ` is calling you`}</Text>
-      <TouchableOpacity style={styles.respondButton} onPress={onRespond}>
+      <TouchableOpacity style={styles.respondButton} onPress={()=>Respond(userId, navigation)}>
         <Text style={styles.buttonText}>Respond</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.terminateButton} onPress={()=>HangUp(userId, navigation)}>

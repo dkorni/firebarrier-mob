@@ -146,8 +146,11 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
             let offerData = docSnap.data();
             console.log("Document loaded");
     
+            if(offerData.status != "OfferCreated")
+              return;
+
             // Use the received offerDescription
-            offerDescription = new RTCSessionDescription( offerData );
+            offerDescription = new RTCSessionDescription( offerData.contract );
             await peerConnection.setRemoteDescription( offerDescription );
     
             const answerDescription = await peerConnection.createAnswer();
@@ -157,8 +160,11 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
             
             console.log("Answer created!");
     
+            offerData.contract = answerDescription;
+            offerData.status = "answered";
+
             // update firebase
-            await setDoc(docRef, answerDescription);
+            await setDoc(docRef, offerData);
             console.log("Firebase updated!");
 
             onSnapshot(offerCandidates,(snapshot) => {
@@ -166,7 +172,7 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
                 console.log(change);
                 if (change.type === 'added') {
                   let data = change.doc.data();
-                  console.log("Offer Candidate: "+ data)
+                  console.log("Offer Candidate")
                   peerConnection.addIceCandidate(new RTCIceCandidate(data));
                 }
               });
