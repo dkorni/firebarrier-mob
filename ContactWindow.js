@@ -37,8 +37,15 @@ const ContactWindow = ({navigation}) => {
     })
     .then(async (responseJson) =>  {
       contactsData = responseJson;
-      setContacts(responseJson);
-      return responseJson;
+
+      var token = Context.TOKEN;
+      let tokenData = JSON.parse(atob(token.split('.')[1]));
+      let userId = tokenData.UserId;
+
+      let filteredContacts = responseJson.filter((contact) =>{return contact.id != userId;});
+
+      setContacts(filteredContacts);
+      return filteredContacts;
     })
     .catch((error) => {
       console.error(error);

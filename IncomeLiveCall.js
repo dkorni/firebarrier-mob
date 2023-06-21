@@ -48,6 +48,7 @@ let localMediaStream;
 let remoteMediaStream;
 let isVoiceOnly = false;
 let offerDescription;
+let peerConnection;
 
 
 let mediaConstraints = {
@@ -60,7 +61,29 @@ let mediaConstraints = {
 
 
 
-const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles, onTerminate }) => {
+const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles, onTerminate, navigation }) => {
+
+  const hangupFromCaller = async () => {
+    // Implement sign-in logic here
+    console.log('hangup incoming call...');
+
+    remoteMediaStream.getTracks().forEach(
+      track => track.stop()
+    );
+    
+    remoteMediaStream = null;
+
+    localMediaStream.getTracks().forEach(
+      track => track.stop()
+    );
+
+    localMediaStream = null;
+
+    peerConnection.close();
+    peerConnection = null;
+
+    navigation.navigate('Contacts');
+  };
 
   const [localUrl, setLocalUrl] = useState("");
   const [remoteUrl, setRemoteUrl] = useState("");
@@ -86,17 +109,52 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
         iceServers: [
           {
             urls: 'stun:stun.l.google.com:19302'
-          }
+          },
+          {
+            urls: 'stun:stun1.l.google.com:19302'
+          },
+          {
+            urls: 'stun:stun2.l.google.com:19302'
+          },
+          {
+            urls: 'stun:stun3.l.google.com:19302'
+          },
+          {
+            urls: 'stun:stun4.l.google.com:19302'
+          },
+          {
+            urls: 'stun:stun.ekiga.net'
+          },
+          {
+            urls: 'stun:stun.ideasip.com'
+          },
+          {
+            urls: 'stun:stun.rixtelecom.se'
+          },
+          {
+            urls: 'stun:stun.schlund.de'
+          },
+          {
+            urls: 'stun:stun.stunprotocol.org:3478'
+          },
+          {
+            urls: 'stun:stun.voiparound.com'
+          },
+          {
+            urls: 'stun:stun.voipbuster.com'
+          },
         ]
       };
       
-      let peerConnection = new RTCPeerConnection( peerConstraints );
+      peerConnection = new RTCPeerConnection( peerConstraints );
             // Add our stream to the peer connection.
             localMediaStream.getTracks().forEach( 
               track => peerConnection.addTrack( track, localMediaStream )
             );
 
       peerConnection.addEventListener( 'connectionstatechange', event => {
+        if(peerConnection == null)
+          return;
         switch( peerConnection.connectionState ) {
           case 'closed':
             // You can handle the call being disconnected here.
@@ -121,6 +179,8 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
       } );
       
       peerConnection.addEventListener( 'iceconnectionstatechange', event => {
+        if(peerConnection == null)
+         return;
         switch( peerConnection.iceConnectionState ) {
           case 'connected':
           case 'completed':
@@ -145,6 +205,17 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
             let docSnap = await getDoc(docRef);
             let offerData = docSnap.data();
             console.log("Document loaded");
+
+                      // subscribing on document changes
+          const unsub = onSnapshot(docRef, async (doc) => {
+            console.log("Updated data: "+doc.data());
+            const answer = doc.data();
+
+           if(answer.status == "hangupFromCaller"){
+              await hangupFromCaller();
+            }                
+          });
+
     
             if(offerData.status != "OfferCreated")
               return;
@@ -187,7 +258,7 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
         switch( peerConnection.signalingState ) {
           case 'closed':
             // You can handle the call being disconnected here.
-      
+            hangupFromCaller();
             break;
         };
       } );
@@ -214,6 +285,35 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
     asyncCall()
   }
   
+  const hangupFromReceiver = async () => {
+    // Implement sign-in logic here
+    console.log('hangup incoming call...');
+
+    const docRef = doc(db, "calls", id);
+    let docSnap = await getDoc(docRef);
+    let offerData = docSnap.data();
+
+    offerData.status = "hangupFromReceiver";
+
+    await setDoc(docRef, offerData);
+
+    remoteMediaStream.getTracks().forEach(
+      track => track.stop()
+    );
+    
+    remoteMediaStream = null;
+
+    localMediaStream.getTracks().forEach(
+      track => track.stop()
+    );
+
+    localMediaStream = null;
+
+    peerConnection.close();
+    peerConnection = null;
+
+    navigation.navigate('Contacts');
+  };
 
 
   return (
@@ -248,10 +348,10 @@ const IncomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles,
       />
       <View style={styles.footer}>
         <View style={styles.subtitlesContainer}>
-          <TextInput style={styles.subtitles}>{offerId}</TextInput>
+          <TextInput style={styles.subtitles}>Тут має бути переклад</TextInput>
         </View>
-        <TouchableOpacity style={styles.terminateButton} onPress={onTerminate}>
-          <Text style={styles.buttonText}>Terminate</Text>
+        <TouchableOpacity style={styles.terminateButton} onPress={hangupFromReceiver}>
+          <Text style={styles.buttonText}>Hang up</Text>
         </TouchableOpacity>
       </View>
     </View>

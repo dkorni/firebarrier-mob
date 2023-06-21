@@ -48,6 +48,7 @@ let localMediaStream;
 let remoteMediaStream;
 let isVoiceOnly = false;
 let offerDescription;
+let peerConnection;
 
 
 let mediaConstraints = {
@@ -60,7 +61,29 @@ let mediaConstraints = {
 
 
 
-const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles, onTerminate }) => {
+const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles, onTerminate, navigation }) => {
+
+  const hangupFromReceiver = async () => {
+    // Implement sign-in logic here
+    console.log('hangup outcoming call...');
+
+    remoteMediaStream.getTracks().forEach(
+      track => track.stop()
+    );
+    
+    remoteMediaStream = null;
+
+    localMediaStream.getTracks().forEach(
+      track => track.stop()
+    );
+
+    localMediaStream = null;
+
+    peerConnection.close();
+    peerConnection = null;
+
+    navigation.navigate('Contacts');
+  };
 
   const [localUrl, setLocalUrl] = useState("");
   const [remoteUrl, setRemoteUrl] = useState("");
@@ -86,11 +109,44 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
         iceServers: [
           {
             urls: 'stun:stun.l.google.com:19302'
-          }
+          },
+          {
+            urls: 'stun:stun1.l.google.com:19302'
+          },
+          {
+            urls: 'stun:stun2.l.google.com:19302'
+          },
+          {
+            urls: 'stun:stun3.l.google.com:19302'
+          },
+          {
+            urls: 'stun:stun4.l.google.com:19302'
+          },
+          {
+            urls: 'stun:stun.ekiga.net'
+          },
+          {
+            urls: 'stun:stun.ideasip.com'
+          },
+          {
+            urls: 'stun:stun.rixtelecom.se'
+          },
+          {
+            urls: 'stun:stun.schlund.de'
+          },
+          {
+            urls: 'stun:stun.stunprotocol.org:3478'
+          },
+          {
+            urls: 'stun:stun.voiparound.com'
+          },
+          {
+            urls: 'stun:stun.voipbuster.com'
+          },
         ]
       };
       
-      let peerConnection = new RTCPeerConnection( peerConstraints );
+      peerConnection = new RTCPeerConnection( peerConstraints );
 
 
       let remoteCandidates = [];
@@ -113,10 +169,11 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
       };
       
       peerConnection.addEventListener( 'connectionstatechange', event => {
+        if(peerConnection == null)
+          return;
         switch( peerConnection.connectionState ) {
           case 'closed':
-            // You can handle the call being disconnected here.
-      
+
             break;
         };
       } );
@@ -138,6 +195,8 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
       } );
       
       peerConnection.addEventListener( 'iceconnectionstatechange', event => {
+        if(peerConnection == null)
+          return;
         switch( peerConnection.iceConnectionState ) {
           case 'connected':
           case 'completed':
@@ -185,7 +244,9 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
               const answerDescription = new RTCSessionDescription( answer.contract );
               console.log("Setting remote description: "+doc.data());
               await peerConnection.setRemoteDescription( answerDescription );
-            }           
+            }else if(answer.status == "hangupFromReceiver"){
+              await hangupFromReceiver();
+            }                
           });
 
           var answerCandidates = collection(db, "answerCandidates");
@@ -248,6 +309,35 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
     asyncCall()
   }
   
+  const hangupFromCaller = async () => {
+    // Implement sign-in logic here
+    console.log('hangup outcoming call...');
+
+    const docRef = doc(db, "calls", id);
+    let docSnap = await getDoc(docRef);
+    let offerData = docSnap.data();
+
+    offerData.status = "hangupFromCaller";
+
+    await setDoc(docRef, offerData);
+
+    remoteMediaStream.getTracks().forEach(
+      track => track.stop()
+    );
+    
+    remoteMediaStream = null;
+
+    localMediaStream.getTracks().forEach(
+      track => track.stop()
+    );
+
+    localMediaStream = null;
+
+    peerConnection.close();
+    peerConnection = null;
+
+    navigation.navigate('Contacts');
+  };
 
 
   return (
@@ -282,10 +372,10 @@ const OutcomeLiveCall = ({ route, receiverCameraView, ownerCameraView, subtitles
       />
       <View style={styles.footer}>
         <View style={styles.subtitlesContainer}>
-          <TextInput style={styles.subtitles}>{offerId}</TextInput>
+          <TextInput style={styles.subtitles}>Тут має бути переклад</TextInput>
         </View>
-        <TouchableOpacity style={styles.terminateButton} onPress={onTerminate}>
-          <Text style={styles.buttonText}>Terminate</Text>
+        <TouchableOpacity style={styles.terminateButton} onPress={hangupFromCaller}>
+          <Text style={styles.buttonText}>Hang up</Text>
         </TouchableOpacity>
       </View>
     </View>
